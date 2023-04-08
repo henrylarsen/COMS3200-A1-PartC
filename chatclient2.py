@@ -50,7 +50,7 @@ if __name__ == '__main__':
 """
 
 
-client = Client(12351, "user0")
+client = Client(12351, "user1")
 client.connect_channel()
 
 # while True:
