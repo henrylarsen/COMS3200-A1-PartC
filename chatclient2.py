@@ -1,3 +1,4 @@
+import os
 import socket
 import sys
 import threading
@@ -9,6 +10,7 @@ class Client:
         self.username = username
         self.host = socket.gethostname()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.terminate = False
 
     def connect_channel(self):
         self.socket.connect((self.host, self.channel_port))
@@ -23,17 +25,31 @@ class Client:
 
     def send(self):
         while True:
-            message = input()
-            self.socket.send(message.encode())
+            try:
+                message = input()
+                self.socket.send(message.encode())
+            except:
+                self.socket.close()
+                break
+        os._exit(0)
 
     def receive(self):
         while True:
-            # try:
-            message = self.socket.recv(1024).decode()
-            print(f'{message}\n')
+            try:
+                message = self.socket.recv(1024).decode()
+                if message == '/quit':
+                    self.socket.close()
+                    os._exit(1)
+                print(f'{message}\n')
+
+            except:
+                self.socket.close()
+                os._exit(1)
+
             # except:
             #     self.socket.close()
             #     sys.exit()
+
 
 
 # RUN FROM TERMINAL
@@ -50,8 +66,9 @@ if __name__ == '__main__':
 """
 
 
-client = Client(12351, "user1")
+client = Client(12351, "user0")
 client.connect_channel()
+# exit(1)
 
 # while True:
 #     message = input()
