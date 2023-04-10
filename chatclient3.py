@@ -101,7 +101,7 @@ if __name__ == '__main__':
 """
 
 
-client = Client(12351, "user0")
+client = Client(12351, "user2")
 client.connect_channel()
 # exit(1)
 

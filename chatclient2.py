@@ -2,6 +2,7 @@ import os
 import socket
 import sys
 import threading
+from datetime import datetime
 
 
 class Client:
@@ -27,16 +28,50 @@ class Client:
         while True:
             try:
                 message = input()
-                self.socket.send(message.encode())
             except:
                 self.socket.close()
                 break
+            # If sending a file
+            if message.startswith('/send'):
+                print('Check0')
+                _, target, file_path = message.split(' ')
+                try:
+                    print('Check1')
+                    file_data = open(file_path, 'rb').read()
+                    self.socket.send(f'/send {target} {file_path} {len(file_data)}'.encode())
+                    self.socket.sendall(file_data)
+                except:
+                    print('Check2')
+                    print(f'[Server message ({datetime.now().strftime("%H:%M:%S")})]: {file_path} does not exist.')
+
+            else:
+                self.socket.send(message.encode())
+
         os._exit(0)
 
     def receive(self):
         while True:
             try:
                 message = self.socket.recv(1024).decode()
+                if message.startswith('/send'):
+                    _, sender, file_name, file_size = message.split()
+                    file_size = int(file_size)
+                    file_data = b''
+
+                    while len(file_data) < file_size:
+                        print(f'{len(file_data)}, {file_size}')
+                        data = self.socket.recv(1024)
+                        if not data:
+                            break
+                        file_data += data
+
+                    file_name = file_name.split('\\')[-1].split('1')[0]
+                    # print(os.path.splitext(sys.argv[0])[-1])
+                    file_path = f'{os.getcwd()}\{file_name}'
+                    print(f'file path: {file_path}')
+                    open(file_path, 'wb').write(file_data)
+                    print('Check 10')
+
                 if message == '/quit':
                     self.socket.close()
                     os._exit(1)
@@ -66,7 +101,7 @@ if __name__ == '__main__':
 """
 
 
-client = Client(12351, "user0")
+client = Client(12351, "user1")
 client.connect_channel()
 # exit(1)
 

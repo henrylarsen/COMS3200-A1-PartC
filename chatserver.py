@@ -43,11 +43,16 @@ class Server:
                     channel.clients.remove(user)
                     user.connection.send('/quit'.encode())
                     user.connection.close()
+                    channel.broadcast(None, f'[Server message ({datetime.now().strftime("%H:%M:%S")})] '
+                                            f'{user_kick} has left the channel')
                     channel.broadcast(None,
-                                      f'[Server message ({datetime.now().strftime("%H:%M:%S")})] {user_kick} has left the channel')
-                    channel.broadcast(None,
-                                      f'[Server message ({datetime.now().strftime("%H:%M:%S")})] Kicked {user_kick}')
+                                      f'[Server message ({datetime.now().strftime("%H:%M:%S")})] Kicked {user_kick}.')
                     print(f'[Server message ({datetime.now().strftime("%H:%M:%S")})] Kicked {user_kick}')
+                    if len(channel.queue) != 0:
+                        next_client = channel.queue[0]
+                        channel.queue.pop(0)
+                        channel.clients.append(next_client)
+
                     return
         print(f'[Server message ({datetime.now().strftime("%H:%M:%S")})] {user_kick} is not here.')
 
@@ -155,10 +160,10 @@ class Channel:
             f' {client.username}.'.encode())
 
         # If there is matched username, cannot enter
-        # TODO: add how this blocks from entering
         if matched_username(self, client.username):
             client.connection.send(f'[Server message ({datetime.now().strftime("%H:%M:%S")})] Cannot enter the '
                                    f'{self.name} channel.'.encode())
+            return
 
         # Adds client to queue
         self.queue.append(client)
@@ -192,7 +197,7 @@ class Channel:
         if command == "/whisper":
             self.whisper_command(message, client)
         elif command == "/quit":
-            self.quit_command(message, client)
+            self.quit_command(client)
         elif command == "/list":
             self.list_command(message, client)
         elif command == "/switch":
@@ -238,16 +243,21 @@ class Channel:
         client.connection.send(f'[Server message ({datetime.now().strftime("%H:%M:%S")})] {send_user} is not here.'
                                .encode())
 
-    def quit_command(self, message, client):
+    def quit_command(self, client):
         if client in self.clients:
 
             self.clients.remove(client)
             self.broadcast(None, f'[Server message ({datetime.now().strftime("%H:%M:%S")})] {client.username} has left'
                                  f' the channel.'.encode())
+            if len(self.queue) != 0:
+                next_client = self.queue[0]
+                self.queue.pop(0)
+                self.clients.append(next_client)
         else:
             self.queue.remove(client)
 
         client.connection.send(f'/quit'.encode())
+        client.connection.close()
         print(f'[Server message ({datetime.now().strftime("%H:%M:%S")})] {client.username} has left'
               f' the channel.')
 
@@ -287,9 +297,31 @@ class Channel:
         client.connection.send(f'[Server message ({datetime.now().strftime("%H:%M:%S")}) {destination_channel} does '
                                f'not exist.'.encode())
 
-    # TODO: implement send
     def send_command(self, message, client):
-        print('/send Command')
+        print(f'Check 3')
+        target, file_path, file_size = message.split()[1:]
+        print(f'Check 4: {message}')
+        file_size = int(file_size)
+        print(f'Check 5')
+        file_data = open(file_path, 'rb').read()
+        print(f'Check 6')
+
+        for user in self.clients:
+            if user.username == target:
+                user.connection.send(message.encode())
+                file_data = b''
+                while len(file_data) < file_size:
+                    data = client.connection.recv(1024)
+                    if not data:
+                        break
+                    file_data += data
+                user.connection.sendall(file_data)
+                client.connection.send(f'[Server message ({datetime.now().strftime("%H:%M:%S")})] You sent '
+                                           f'{file_path} to {target}.')
+                print(f'[Server message ({datetime.now().strftime("%H:%M:%S")})] {client.username} sent {file_path}'
+                          f' to {target}')
+                return
+        client.connection.send(f'[Server message ({datetime.now().strftime("%H:%M:%S")})] {target} is not here.')
 
 
 class ServerClient:
@@ -328,7 +360,7 @@ if __name__ == '__main__':
 """
 
 # RUN FROM IN PYCHARM
-channel_list = [Channel('first', 12351, 5), Channel('second', 12352, 5), Channel('third', 12353, 5)]
+channel_list = [Channel('first', 12351, 2), Channel('second', 12352, 5), Channel('third', 12353, 5)]
 server = Server(channel_list)
 server.start()
 
