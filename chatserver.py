@@ -62,8 +62,6 @@ class Server:
                           f' {mute_time} seconds.')
                     user.connection.send(f'[Server message ({datetime.now().strftime("%H:%M:%S")})] You have been'
                                          f' muted for {mute_time} seconds.'.encode())
-                    print(f'Muted dict: {self.muted}\n')
-                    print(f'Muted dict time: {self.muted[mute_user] - time.time()}')
                     for channels in channel_list:
                         channels.broadcast(None, f'[Server message ({datetime.now().strftime("%H:%M:%S")})] '
                                                  f'{mute_user} has been muted for {mute_time} seconds.')
@@ -140,7 +138,6 @@ class Channel:
         while True:
             try:
                 conn, addr = self.socket.accept()
-                print(f'Socket connection: {conn}\n Socket address: {addr}')
                 client_thread = threading.Thread(target=self.handle_client, args=(conn, addr))
                 client_thread.start()
             except:
@@ -242,17 +239,14 @@ class Channel:
                                .encode())
 
     def quit_command(self, message, client):
-        # print(f'quit command')
-        # print(f'Client: {client}, self.clients: {self.clients}')
         if client in self.clients:
-            # print(f'check1')
+
             self.clients.remove(client)
             self.broadcast(None, f'[Server message ({datetime.now().strftime("%H:%M:%S")})] {client.username} has left'
                                  f' the channel.'.encode())
         else:
             self.queue.remove(client)
 
-        # print(f'Check')
         client.connection.send(f'/quit'.encode())
         print(f'[Server message ({datetime.now().strftime("%H:%M:%S")})] {client.username} has left'
               f' the channel.')
