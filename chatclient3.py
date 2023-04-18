@@ -11,7 +11,6 @@ class Client:
         self.username = username
         self.host = socket.gethostname()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.terminate = False
 
     def connect_channel(self):
         self.socket.connect((self.host, self.channel_port))
@@ -33,15 +32,12 @@ class Client:
                 break
             # If sending a file
             if message.startswith('/send'):
-                print('Check0')
                 _, target, file_path = message.split(' ')
                 try:
-                    print('Check1')
                     file_data = open(file_path, 'rb').read()
                     self.socket.send(f'/send {target} {file_path} {len(file_data)}'.encode())
                     self.socket.sendall(file_data)
                 except:
-                    print('Check2')
                     print(f'[Server message ({datetime.now().strftime("%H:%M:%S")})]: {file_path} does not exist.')
 
             else:
@@ -59,7 +55,6 @@ class Client:
                     file_data = b''
 
                     while len(file_data) < file_size:
-                        print(f'{len(file_data)}, {file_size}')
                         data = self.socket.recv(1024)
                         if not data:
                             break
@@ -68,23 +63,16 @@ class Client:
                     file_name = file_name.split('\\')[-1].split('1')[0]
                     # print(os.path.splitext(sys.argv[0])[-1])
                     file_path = f'{os.getcwd()}\{file_name}'
-                    print(f'file path: {file_path}')
                     open(file_path, 'wb').write(file_data)
-                    print('Check 10')
 
                 if message == '/quit':
                     self.socket.close()
                     os._exit(1)
-                print(f'{message}\n')
+                print(f'{message}')
 
             except:
                 self.socket.close()
                 os._exit(1)
-
-            # except:
-            #     self.socket.close()
-            #     sys.exit()
-
 
 
 # RUN FROM TERMINAL
@@ -103,14 +91,3 @@ if __name__ == '__main__':
 
 client = Client(12351, "user2")
 client.connect_channel()
-# exit(1)
-
-# while True:
-#     message = input()
-#     client.send(message)
-
-# if message == 'quit':
-#     client_skt.close()
-
-# python3 chatclient.py 12351 user0
-# python3 chatclient.py 12352 user1
