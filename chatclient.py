@@ -27,8 +27,7 @@ class Client:
             try:
                 message = input()
             except:
-                self.socket.close()
-                break
+                continue
             # If sending a file
             if message.startswith('/send'):
                 _, target, file_path = message.split(' ')
@@ -38,7 +37,6 @@ class Client:
                     self.socket.sendall(file_data)
                 except:
                     self.socket.send(f'/send {target} {file_path} {0}'.encode())
-                    # print(f'[Server message ({datetime.now().strftime("%H:%M:%S")})] {file_path} does not exist.')
 
             else:
                 self.socket.send(message.encode())
@@ -62,7 +60,6 @@ class Client:
                             break
                         file_data += data
 
-                    # print(file_name.split('\\')[-1])
                     file_name = file_name.split('\\')[-1]
                     file_path = f'{os.getcwd()}\{file_name}'
                     open(file_path, 'wb').write(file_data)

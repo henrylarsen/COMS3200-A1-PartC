@@ -129,19 +129,24 @@ def matched_username(channel, username):
 def add_to_channel(channel, client):
     # Adds client to queue
     channel.queue.append(client)
-    client.connection.send(f'[Server message ({datetime.now().strftime("%H:%M:%S")})] You are in the waiting'
-                           f' queue and there are {channel.queue.index(client)} user(s) ahead of you.'.encode())
 
     # If fewer clients in channel than capacity, add client
     if len(channel.clients) < channel.capacity:
         channel.queue.pop(channel.queue.index(client))
         channel.clients.append(client)
         client.connection.send(
-            f'[Server message ({datetime.now().strftime("%H:%M:%S")})] {client.username} has joined the '
-            f'channel.'.encode())
+            f'[Server message ({datetime.now().strftime("%H:%M:%S")})] Welcome to the {channel.name} channel, '
+            f'{client.username}.\n'.encode())
+        channel.broadcast(None,
+                          f'[Server message ({datetime.now().strftime("%H:%M:%S")})] {client.username} has joined the '
+                          f'channel.'.encode())
         print(f'[Server message ({datetime.now().strftime("%H:%M:%S")})] {client.username} has joined the '
               f'{channel.name} channel.', flush=True)
         channel.receive(client)
+
+    else:
+        client.connection.send(f'[Server message ({datetime.now().strftime("%H:%M:%S")})] You are in the waiting'
+                               f' queue and there are {channel.queue.index(client)} user(s) ahead of you.'.encode())
 
 
 class Channel:
@@ -186,7 +191,6 @@ class Channel:
                 if first_mute_iteration:
                     client.timeout = server.muted[(self.name, client.username)] - time.time() + client.timeout
                 # If the clients mute time is up, remove
-                # print(f'Check: {server.muted[(self.name, client.username)] - time.time()}')
                 if time.time() >= server.muted[(self.name, client.username)]:
                     del server.muted[(self.name, client.username)]
                     first_mute_iteration = True
@@ -217,7 +221,7 @@ class Channel:
         # Send welcome message
         client.connection.send(
             f'[Server message ({datetime.now().strftime("%H:%M:%S")})] Welcome to the {self.name} channel,'
-            f' {client.username}.'.encode())
+            f' {client.username}.\n'.encode())
 
         # If there is matched username, cannot enter
         if matched_username(self, client.username):
@@ -258,7 +262,7 @@ class Channel:
     # Check to see if any commands occur
     def command_check(self, message, client):
         not_queue = True
-        muted = True
+        muted = False
         if len(message) == 0:
             return
         if client in self.queue:
@@ -297,6 +301,7 @@ class Channel:
 
         # Broadcast message with user
         else:
+
             for client in self.clients:
                 client.connection.send(f'[{sender.username} ({datetime.now().strftime("%H:%M:%S")})] {message}'
                                        .encode())
@@ -304,7 +309,7 @@ class Channel:
     def whisper_command(self, message, client):
         send_user = message.split()[1]
         message_only = ' '.join(message.split()[2:])
-        print(f'[{client.username} whispers to {send_user}: ({datetime.now().strftime("%H:%M:%S")})]: {message_only}',
+        print(f'[{client.username} whispers to {send_user}: ({datetime.now().strftime("%H:%M:%S")})] {message_only}',
               flush=True)
         for user in self.clients:
             if user.username == send_user:
@@ -343,6 +348,7 @@ class Channel:
             if first:
                 client.connection.send(f'[Channel] {channel.name} {len(channel.clients)}/{channel.capacity}/'
                                        f'{len(channel.queue)}.'.encode())
+                first = False
             else:
                 client.connection.send(f'\n[Channel] {channel.name} {len(channel.clients)}/{channel.capacity}/'
                                        f'{len(channel.queue)}.'.encode())
@@ -383,13 +389,12 @@ class Channel:
                           f'left the channel.', flush=True)
                     add_to_channel(channel, client)
                 return
-        client.connection.send(f'[Server message ({datetime.now().strftime("%H:%M:%S")}) {destination_channel} does '
+        client.connection.send(f'[Server message ({datetime.now().strftime("%H:%M:%S")})] {destination_channel} does '
                                f'not exist.'.encode())
 
     def send_command(self, message, client):
         target, file_path, file_size = message.split()[1:]
         file_size = int(file_size)
-
         for user in self.clients:
             if user.username == target:
                 # If file_size == 0 then the path does not exist
