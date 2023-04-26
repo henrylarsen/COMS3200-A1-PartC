@@ -229,7 +229,7 @@ test-queue-dup.sh				---GOOD
 
 test-whisper-good.sh		---GOOD (inconsistent)
 
-test-whisper-bad.sh			---GOOD
+test-whisper-bad.sh			---GOOD (inconsistent)
 
 test-quit-channel.sh	    ---GOOD (inconsistent)
 
@@ -245,19 +245,19 @@ test-switch-full.sh			- come back, timing off but also not working
 
 test-switch-dup.sh   			---GOOD              
 
-test-send-good.sh				- needs work
+test-send-good.sh				- needs work (got file, client logs to match)
 
 test-send-badfile.sh                                    
 
 test-send-badclient.sh                               
 
-test-send-both.sh      
+test-send-both.sh               ---GOOD  
 
-test-noncommand.sh
+test-noncommand.sh              ---GOOD (inconsistent)
 
 ##### SERVER COMMANDS
 
-test-kick-badchannel.sh             ---GOOD    
+test-kick-badchannel.sh             ---GOOD (inconsistent)
 
 test-kick-badclient.sh         	    ---GOOD      
 
@@ -269,9 +269,9 @@ test-mute-badchannel.sh			---GOOD
 
 test-mute-badclient.sh			---GOOD
 
-test-mute-timer.sh			    ---GOOD
+test-mute-timer.sh			    ---GOOD (inconsistent)
 
-test-mute-good.sh				---GOOD
+test-mute-good.sh				---GOOD (inconsistent)
 
 ***test-mute-timeout.sh	-- Manual testing for this***
                                                                                             
@@ -280,5 +280,3 @@ test-empty-bad.sh				---GOOD
 test-empty-multichannel.sh                    
 
 test-shutdown.sh           		---GOOD  
-
-37/47 tests pass

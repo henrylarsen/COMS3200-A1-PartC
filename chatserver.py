@@ -221,7 +221,7 @@ class Channel:
         # Send welcome message
         client.connection.send(
             f'[Server message ({datetime.now().strftime("%H:%M:%S")})] Welcome to the {self.name} channel,'
-            f' {client.username}.\n'.encode())
+            f' {client.username}.'.encode())
 
         # If there is matched username, cannot enter
         if matched_username(self, client.username):
